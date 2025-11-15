@@ -1,21 +1,40 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
-/*
-En tu escena debes tener un objeto con Is Trigger que ser'a tu tp de origen y otro gameobject que sera tu lugar de destino
-El objeto de origen tendra el script y en el transform publico pondras el objeto de destino
-*/
+using System.Collections;
 
 public class Tpzona : MonoBehaviour
 {
-    public Transform destino; //El lugar a donde se va a teletransportar el player
+    public Transform destino; 
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        //Coloca el punto a dónde se tepea el jugador en el inspector de la hitbox
+        if (!other.CompareTag("Player")) return;
+
+        CharacterController cc = other.GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+
+        Rigidbody rb = other.GetComponent<Rigidbody>();
+        if (rb != null)
         {
-            other.transform.position = destino.position;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
+
+        // El tp del jugador al Empty
+        other.transform.position = destino.position;
+        other.transform.rotation = destino.rotation;
+
+        if (cc != null) cc.enabled = true;
+
+        StartCoroutine(DisableTriggerTemporarily(0.2f));
+    }
+
+    private IEnumerator DisableTriggerTemporarily(float time)
+    {
+        Collider col = GetComponent<Collider>();
+        if (col == null) yield break;
+        col.enabled = false;
+        yield return new WaitForSeconds(time);
+        col.enabled = true;
     }
 }
